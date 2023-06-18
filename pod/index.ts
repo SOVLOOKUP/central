@@ -2,13 +2,16 @@
 import { Channel } from "queueable"
 import { z } from "zod"
 import { io } from "socket.io-client";
-import { Hooks, newHook, newSend } from "../utils";
-import { allType } from "../type"
+import { newHook, newSend } from "../utils";
+import { allType, jsonSchema, PodConfig } from "../type"
 export { newHook }
 
-export default function Connect(uri: string, hooks: Hooks = {}) {
-    const socket = io(uri, { auth: { type: "pod", token: "" } });
+export default function Connect(opt: PodConfig) {
+    const socket = io(opt.url, { auth: { type: "pod", token: "" } });
+    const hooks = opt.hooks ?? {}
+    const info = opt.info ?? (() => { })
     socket.compress(true)
+    socket["info"] = info
     const msgChannel = new Channel<z.infer<typeof allType>>()
     const meta = new Map(Object.entries(hooks))
     const send = newSend(socket)
@@ -19,13 +22,15 @@ export default function Connect(uri: string, hooks: Hooks = {}) {
                 input: z.void(),
                 output: z.object({
                     id: z.string(),
+                    info: jsonSchema.optional(),
                     hooks: z.record(z.string(), z.string()),
                 })
             };
         },
-        func: (_) => {
+        func: async (_) => {
             const output = {
                 id: socket["id"],
+                info: await socket["info"]() ?? null,
                 hooks: {}
             }
             for (const [key, value] of meta) {
@@ -67,7 +72,7 @@ export default function Connect(uri: string, hooks: Hooks = {}) {
                         }
                     } catch (error) {
                         // 函数运行错误
-                        console.log("函数运行错误")
+                        console.log("函数运行错误", error)
                     }
                 } else {
                     // 校验失败 输入校验失败

@@ -8,37 +8,23 @@ const token = "token"
 // server
 server(new Server(port))
 
-pod(`ws://${domain}:${port}`, {
-    add: newHook({
-        io: (z) => ({
-            input: z.number(),
-            output: z.number()
+pod({
+    url: `ws://${domain}:${port}`, hooks: {
+        add: newHook({
+            io: (z) => ({
+                input: z.number(),
+                output: z.number()
+            }),
+            func: (x) => x + 1
         }),
-        func: (x) => x + 1
-    }),
-    plus: newHook({
-        io: (z) => ({
-            input: z.number(),
-            output: z.number()
-        }),
-        func: (x) => x + 1
-    })
-})
-pod(`ws://${domain}:${port}`, {
-    add: newHook({
-        io: (z) => ({
-            input: z.number(),
-            output: z.number()
-        }),
-        func: (x) => x + 1
-    }),
-    plus: newHook({
-        io: (z) => ({
-            input: z.number(),
-            output: z.number()
-        }),
-        func: (x) => x + 1
-    })
+        plus: newHook({
+            io: (z) => ({
+                input: z.number(),
+                output: z.number()
+            }),
+            func: (x) => x + 1
+        })
+    }
 })
 
 // client

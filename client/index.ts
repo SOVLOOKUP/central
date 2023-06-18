@@ -11,6 +11,8 @@ export default function Connect({ uri, token }: { uri: string, token: string }) 
     const socket = io(uri, { auth: { type: "client", token: token } });
     const send = newSend(socket)
 
+    const call = (msg_id = nanoid()) => { }
+
     // 获取所有 pod 的 id
     const pods = async (msg_id = nanoid()) => {
         const subscription = filter((v) => v.id === msg_id, msgChannel[Symbol.asyncIterator]())

@@ -1,9 +1,24 @@
 import { Socket } from "socket.io"
 import { ZodType } from "zod"
 import { z } from "zod"
+import { Hooks } from "./utils"
+
+const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+type Literal = z.infer<typeof literalSchema>;
+export type Json = Literal | { [key: string]: Json } | Json[];
+export const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
+    z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)])
+);
 
 export interface CentralSocket extends Socket {
     type: "pod" | "client"
+    info: () => Promise<Json> | Json
+}
+
+export interface PodConfig {
+    url: string
+    info?: () => Json | Promise<Json>
+    hooks?: Hooks
 }
 
 // RPC 函数的出入参
@@ -14,6 +29,7 @@ export interface IO {
 
 export interface ClientHook {
     id: string,
+    info: Json,
     hooks: { [key: string]: IO }
 }
 
@@ -28,20 +44,20 @@ export const callType = baseType.extend({
     data: z.object({
         target: z.array(z.string()).default([]),
         func: z.string(),
-        input: z.any()
+        input: jsonSchema.optional()
     })
 })
 
 // 返回类型
 export const returnType = baseType.extend({
     type: z.enum(["return"]),
-    data: z.object(
+    data: z.union([z.object(
         {
             func: z.string(),
             status: z.enum(["success"]),
-            output: z.any()
+            output: jsonSchema.optional()
         }
-    ).or(z.object(
+    ), z.object(
         {
             func: z.string(),
             status: z.enum(["error"]),
@@ -51,7 +67,7 @@ export const returnType = baseType.extend({
                 stack: z.string().optional()
             })
         }
-    ))
+    )])
 })
 
 export const allType = z.union([callType, returnType])
