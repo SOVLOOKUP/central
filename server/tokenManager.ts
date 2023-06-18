@@ -1,12 +1,7 @@
-import { z } from "zod"
+import { AuthMsg } from "../type"
 
 // todo
 const token = ["token"]
-
-const AuthMsg = z.object({
-    type: z.enum(["client", "pod"]),
-    token: z.string()
-})
 
 export default () => {
     return {

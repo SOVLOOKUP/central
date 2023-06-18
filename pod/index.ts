@@ -3,7 +3,7 @@ import { Channel } from "queueable"
 import { z } from "zod"
 import { io } from "socket.io-client";
 import { newHook, newSend } from "../utils";
-import { allType, jsonSchema, PodConfig } from "../type"
+import { allType, ClientHook, PodConfig } from "../type"
 export { newHook }
 
 export default function Connect(opt: PodConfig) {
@@ -20,14 +20,10 @@ export default function Connect(opt: PodConfig) {
         io: (z) => {
             return {
                 input: z.void(),
-                output: z.object({
-                    id: z.string(),
-                    info: jsonSchema.optional(),
-                    hooks: z.record(z.string(), z.string()),
-                })
+                output: ClientHook
             };
         },
-        func: async (_) => {
+        func: async () => {
             const output = {
                 id: socket["id"],
                 info: await socket["info"]() ?? null,
