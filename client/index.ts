@@ -21,11 +21,11 @@ export default function Connect({ uri, token }: { uri: string, token: string }) 
         return (await subscription.next()).value.data.output as string[]
     }
 
-    const meta = async (msg_id = nanoid()) => {
+    const meta = async (msg_id = nanoid()): Promise<AsyncIterableIterator<ClientHook>> => {
         const subscription = filter((v) => v.id === msg_id, msgChannel[Symbol.asyncIterator]())
         const sockets = await pods()
         if (sockets.length === 0) {
-            return concat([])
+            return concat([]) as unknown as AsyncIterableIterator<ClientHook>
         }
         await send({
             id: msg_id,
