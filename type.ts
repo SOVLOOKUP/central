@@ -26,6 +26,7 @@ const baseType = z.object({
 export const callType = baseType.extend({
     type: z.enum(["call"]),
     data: z.object({
+        target: z.array(z.string()).default([]),
         func: z.string(),
         input: z.any()
     })

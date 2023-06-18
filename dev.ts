@@ -43,8 +43,10 @@ pod(`ws://${domain}:${port}`, {
 
 // client
 const sdk = client({ uri: `ws://${domain}:${port}`, token })
-const hooks = await sdk.getHooks()
+const meta = await sdk.meta()
 
-for await (const hook of hooks.msgIter) {
+for await (const hook of meta) {
     console.log(hook)
 }
+
+console.log("end");

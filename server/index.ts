@@ -1,5 +1,5 @@
 import type { Server } from "socket.io"
-import { newSend } from '../utils';
+import { condition, newSend } from '../utils';
 import { nanoid } from "nanoid"
 import { filter, take } from "streaming-iterables"
 import { Multicast } from 'queueable';
@@ -11,14 +11,15 @@ export default function serve(wss: Server) {
     wss.compress(true)
     const msgChannel = new Multicast<z.infer<typeof allType>>()
     const tm = TM()
+
     // 广播消息并获得回复
-    const broadcast = async (msg: z.infer<typeof allType>) => {
+    const broadcast = async (msg: z.infer<typeof allType>, ...target: string[]) => {
         const sockets: string[] = []
         for (const socket of await wss.fetchSockets()) {
-            if (socket["type"] === "pod") {
+            // 指定 target 则定向广播
+            if (condition(socket, target)) {
                 sockets.push(socket.id)
-                const send = newSend(socket)
-                await send(msg)
+                await newSend(socket)(msg)
             }
         }
         return { sockets, msgIter: take(sockets.length, filter((v) => v.id === msg.id, msgChannel[Symbol.asyncIterator]())) }
@@ -27,9 +28,21 @@ export default function serve(wss: Server) {
     // 处理 client 信息
     const porcessClientMsg = async (msg: z.infer<typeof allType>, send: ReturnType<typeof newSend>) => {
         if (msg.type === "call") {
-            if (msg.data.func === "__meta__") {
+            // server 自己的调用
+            if (msg.data.func === "__pods__") {
+                // 获取所有的 pod
+                await send({
+                    id: msg.id,
+                    type: "return",
+                    data: {
+                        status: "success",
+                        func: msg.data.func,
+                        output: (await wss.fetchSockets()).filter(i => i["type"] === "pod").map(i => i.id)
+                    }
+                })
+            } else {
                 // 广播消息
-                const { sockets, msgIter } = await broadcast(msg)
+                const { sockets, msgIter } = await broadcast(msg, ...msg.data.target)
                 for await (const msg of msgIter) {
                     await send({
                         id: msg.id,
