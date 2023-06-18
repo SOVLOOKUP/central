@@ -14,6 +14,7 @@ export default function serve(wss: WebSocketServer, token: string) {
     // 有客户端连接时
     wss.on('connection', async (socket) => {
         socket.binaryType = "arraybuffer";
+        const send = newSend(socket)
 
         socket.once("message", async (data) => {
             if (!isArrayBuffer(data)) {
@@ -36,7 +37,6 @@ export default function serve(wss: WebSocketServer, token: string) {
                         };
                     } else if (msg.type === "call" && msg.data.func === "initSDK") {
                         // 判断为 SDK 接入
-                        const send = newSend(socket)
                         if (msg.data.input !== token) {
                             // 密钥不正确
                             await send({
@@ -57,23 +57,7 @@ export default function serve(wss: WebSocketServer, token: string) {
                             console.log(socket["id"], "SDK 已连接")
                             socket.onmessage = async (e) => {
                                 const msg: z.infer<typeof allType> = decode(e.data as ArrayBuffer)
-                                if (msg.type === "call") {
-                                    if (msg.data.func === "hooks") {
-                                        // 收集并发送所有 meta
-                                        const { sockets, hooksIter } = await getHooks(msg.id)
-                                        for await (const hook of hooksIter) {
-                                            await send({
-                                                id: msg.id,
-                                                type: "return",
-                                                data: {
-                                                    status: "success",
-                                                    func: msg.data.func,
-                                                    output: { sockets, hook }
-                                                }
-                                            })
-                                        }
-                                    }
-                                }
+                                await porcessClientMsg(msg, send)
                             };
                         }
                     } else {
@@ -95,6 +79,7 @@ export default function serve(wss: WebSocketServer, token: string) {
         };
     })
 
+    // 获取所有 Pod 的 meta
     const getHooks = async (msg_id = nanoid()) => {
         const sockets: string[] = []
         for (const socket of wss.clients.values()) {
@@ -109,6 +94,27 @@ export default function serve(wss: WebSocketServer, token: string) {
             }
         }
         return { sockets, hooksIter: take(sockets.length, filter((v) => v.id === msg_id, msgChannel[Symbol.asyncIterator]())) }
+    }
+
+    // 处理 client 信息
+    const porcessClientMsg = async (msg: z.infer<typeof allType>, send: ReturnType<typeof newSend>) => {
+        if (msg.type === "call") {
+            if (msg.data.func === "hooks") {
+                // 收集并发送所有 meta
+                const { sockets, hooksIter } = await getHooks(msg.id)
+                for await (const hook of hooksIter) {
+                    await send({
+                        id: msg.id,
+                        type: "return",
+                        data: {
+                            status: "success",
+                            func: msg.data.func,
+                            output: { sockets, hook }
+                        }
+                    })
+                }
+            }
+        }
     }
 
     return new Promise<void>((resolve, reject) => {
