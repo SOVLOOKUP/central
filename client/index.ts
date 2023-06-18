@@ -3,8 +3,8 @@ import { nanoid } from "nanoid";
 import { io } from "socket.io-client";
 import { Multicast } from "queueable";
 import { z } from "zod";
-import { allType, ClientHook, returnType } from "../type"
-import { batchWithTimeout, collect, concat, filter, take, transform } from "streaming-iterables";
+import { allType, ClientHook } from "../type"
+import { concat, filter, take, transform } from "streaming-iterables";
 
 export default function Connect({ uri, token }: { uri: string, token: string }) {
     const msgChannel = new Multicast<z.infer<typeof allType>>()

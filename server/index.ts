@@ -1,6 +1,5 @@
 import type { Server } from "socket.io"
 import { condition, newSend } from '../utils';
-import { nanoid } from "nanoid"
 import { filter, take } from "streaming-iterables"
 import { Multicast } from 'queueable';
 import { allType } from '../type';
