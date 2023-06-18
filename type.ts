@@ -1,9 +1,9 @@
+import { Socket } from "socket.io"
 import { ZodType } from "zod"
 import { z } from "zod"
 
-export interface RawHook {
-    id: string,
-    hooks: { [key: string]: string }
+export interface CentralSocket extends Socket {
+    type: "pod" | "client"
 }
 
 // RPC 函数的出入参

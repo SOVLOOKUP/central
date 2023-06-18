@@ -1,17 +1,42 @@
 {
-	"type": "module",
-	"dependencies": {
-		"@trpc/client": "^10.30.0",
-		"@trpc/server": "^10.30.0",
-		"@types/node": "^20.3.1",
-		"@types/ws": "^8.5.5",
-		"@xobj/core": "^1.3.1",
-		"nanoid": "^4.0.2",
-		"queueable": "^5.3.1",
-		"streaming-iterables": "^7.1.0",
-		"ws": "^8.13.0",
-		"y-websocket": "^1.5.0",
-		"yjs": "^13.6.4",
-		"zod": "^3.21.4"
-	}
+  "name": "central",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "dev": "nodemon --exec tsx dev.ts"
+  },
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs",
+    "types": "./dist/index.d.ts"
+  },
+  "dependencies": {
+    "nanoid": "^4.0.2",
+    "queueable": "^5.3.1",
+    "socket.io-client": "^4.6.2",
+    "streaming-iterables": "^7.1.0",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "nodemon": "^2.0.22",
+    "socket.io": "^4.6.2",
+    "tsup": "^7.0.0",
+    "tsx": "^3.12.7",
+    "typescript": "^5.1.3"
+  },
+  "tsup": {
+    "entry": [
+      "index.ts"
+    ],
+    "format": [
+      "esm",
+      "cjs"
+    ],
+    "sourcemap": true,
+    "dts": true,
+    "clean": true,
+    "treeshake": true
+  }
 }

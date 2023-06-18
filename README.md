@@ -15,8 +15,3 @@
 ## 架构图
 
 ![架构图](https://github.com/SOVLOOKUP/central/assets/53158137/4b9ff7a8-83f4-4a90-9f6c-67946738197a)
-
-## 流程图
-
-![image](https://github.com/SOVLOOKUP/central/assets/53158137/7e34a67a-9f53-4fbd-8b71-8ee977214bbc)
-
