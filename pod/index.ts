@@ -100,7 +100,7 @@ export default function Connect(uri: string, hooks: Hooks = {}) {
             await send({
                 id,
                 type: "call",
-                data: { func: "initClient" }
+                data: { func: "initPod" }
             })
             resolve(rc.wrap())
         }

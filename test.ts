@@ -11,7 +11,10 @@ const token = "token"
 await Server(new WebSocketServer({ port: port, }), token)
 
 // pod
-for await (const v of await Pod(`ws://${domain}:${port}`, {
+// for await (const v of ) {
+//     console.log(v);
+// }
+await Pod(`ws://${domain}:${port}`, {
     add: newHook({
         io: (z) => ({
             input: z.number(),
@@ -26,10 +29,23 @@ for await (const v of await Pod(`ws://${domain}:${port}`, {
         }),
         func: (x) => x + 1
     })
-})) {
-    console.log(v);
-}
-
+})
+await Pod(`ws://${domain}:${port}`, {
+    add: newHook({
+        io: (z) => ({
+            input: z.number(),
+            output: z.number()
+        }),
+        func: (x) => x + 1
+    }),
+    plus: newHook({
+        io: (z) => ({
+            input: z.number(),
+            output: z.number()
+        }),
+        func: (x) => x + 1
+    })
+})
 // client
 const sdk = await Client({ uri: `ws://${domain}:${port}`, token })
 const hooks = await sdk.getHooks()

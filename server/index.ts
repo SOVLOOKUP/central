@@ -11,7 +11,6 @@ import { isArrayBuffer } from 'util/types';
 export default function serve(wss: WebSocketServer, token: string) {
     const msgChannel = new Multicast<z.infer<typeof allType>>()
 
-    // 有客户端连接时
     wss.on('connection', async (socket) => {
         socket.binaryType = "arraybuffer";
         const send = newSend(socket)
@@ -26,17 +25,17 @@ export default function serve(wss: WebSocketServer, token: string) {
                     const msg: z.infer<typeof allType> = decode(data)
                     // 记录身份证
                     socket["id"] = msg.id
-                    if (msg.type === "call" && msg.data.func === "initClient") {
-                        // 判断为客户端接入
-                        socket["type"] = "client"
-                        console.log(socket["id"], "客户端已连接")
+                    if (msg.type === "call" && msg.data.func === "initPod") {
+                        // 判断为 Pod 接入
+                        socket["type"] = "pod"
+                        console.log(socket["id"], "Pod 已连接")
                         // 处理消息
                         socket.onmessage = async (e) => {
                             const msg: z.infer<typeof allType> = decode(e.data as ArrayBuffer)
                             msgChannel.push(msg)
                         };
-                    } else if (msg.type === "call" && msg.data.func === "initSDK") {
-                        // 判断为 SDK 接入
+                    } else if (msg.type === "call" && msg.data.func === "initClient") {
+                        // 判断为客户端接入
                         if (msg.data.input !== token) {
                             // 密钥不正确
                             await send({
@@ -53,8 +52,8 @@ export default function serve(wss: WebSocketServer, token: string) {
                             })
                             socket.close()
                         } else {
-                            socket["type"] = "sdk"
-                            console.log(socket["id"], "SDK 已连接")
+                            socket["type"] = "client"
+                            console.log(socket["id"], "客户端已连接")
                             socket.onmessage = async (e) => {
                                 const msg: z.infer<typeof allType> = decode(e.data as ArrayBuffer)
                                 await porcessClientMsg(msg, send)
@@ -72,7 +71,7 @@ export default function serve(wss: WebSocketServer, token: string) {
         })
 
         socket.onclose = () => {
-            console.log(socket["id"], (socket["type"] === "client" ? "客户端" : "SDK") + "已关闭");
+            console.log(socket["id"], (socket["type"] === "client" ? "客户端" : "Pod") + "已关闭");
         };
         socket.onerror = function (e) {
             console.log("出现错误");
@@ -83,7 +82,7 @@ export default function serve(wss: WebSocketServer, token: string) {
     const getHooks = async (msg_id = nanoid()) => {
         const sockets: string[] = []
         for (const socket of wss.clients.values()) {
-            if (socket["type"] === "client") {
+            if (socket["type"] === "pod") {
                 sockets.push(socket["id"])
                 const send = newSend(socket)
                 await send({

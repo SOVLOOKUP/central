@@ -52,11 +52,11 @@ export default function Connect({ uri, token }: { uri: string, token: string }) 
     return new Promise<typeof result>((resolve, reject) => {
         socket.onopen = async () => {
             socket["id"] = nanoid()
-            // 认证 SDK
+            // 认证客户端
             await send({
                 id: socket["id"],
                 type: "call",
-                data: { func: "initSDK", input: token }
+                data: { func: "initClient", input: token }
             })
             resolve(result)
         }
