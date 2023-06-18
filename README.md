@@ -18,4 +18,5 @@
 
 ## 流程图
 
-![image](https://github.com/SOVLOOKUP/central/assets/53158137/e33b9f3e-1f80-408e-9d9f-0190cd85cb52)
+![image](https://github.com/SOVLOOKUP/central/assets/53158137/7e34a67a-9f53-4fbd-8b71-8ee977214bbc)
+
