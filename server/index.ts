@@ -42,16 +42,28 @@ export default function serve(wss: Server) {
             } else {
                 // 广播消息
                 const { sockets, msgIter } = await broadcast(msg, ...msg.data.target)
-                for await (const msg of msgIter) {
+                if (sockets.length === 0) {
                     await send({
                         id: msg.id,
                         type: "return",
                         data: {
                             status: "success",
                             func: msg.data.func,
-                            output: { sockets, msg }
+                            output: { sockets }
                         }
                     })
+                } else {
+                    for await (const msg of msgIter) {
+                        await send({
+                            id: msg.id,
+                            type: "return",
+                            data: {
+                                status: "success",
+                                func: msg.data.func,
+                                output: { sockets, msg }
+                            }
+                        })
+                    }
                 }
             }
         }
