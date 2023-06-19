@@ -6,7 +6,7 @@ import { newHook } from "./utils";
 const literalSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 type Literal = z.infer<typeof literalSchema>;
 type Json = Literal | { [key: string]: Json } | Json[];
-const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
+export const jsonSchema: z.ZodSchema<Json> = z.lazy(() =>
     z.union([literalSchema, z.array(jsonSchema), z.record(jsonSchema)])
 );
 // 拓展后的 Socket 类型
@@ -21,13 +21,6 @@ const O = z.union([jsonSchema, z.void()])
 export type O = z.infer<typeof O>
 const IO = z.object({ input: I, output: O })
 export type IO = z.infer<typeof IO>
-// 传输的 hook meta
-export const ClientHook = z.object({
-    id: z.string().length(20),
-    info: jsonSchema,
-    hooks: z.record(z.string(), z.string())
-})
-export type ClientHook = z.infer<typeof ClientHook>
 // Pod 的初始化参数
 export type Hook = ReturnType<typeof newHook>
 interface Hooks {
@@ -47,6 +40,7 @@ export const AuthMsg = z.object({
 const baseType = z.object({
     // 数据包 ID
     id: z.string().length(21),
+    socketId: z.string().length(20).optional(),
 })
 // 调用类型
 const callType = baseType.extend({
