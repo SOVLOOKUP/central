@@ -4,10 +4,11 @@ import { z } from "zod"
 import { io } from "socket.io-client";
 import { newHook, newSend } from "../utils";
 import { allType, jsonSchema, PodConfig } from "../type"
+import * as parser from "socket.io-msgpack-parser"
 export { newHook }
 
 export default function Connect(opt: PodConfig) {
-    const socket = io(opt.url, { auth: { type: "pod", token: "" } });
+    const socket = io(opt.url, { parser, auth: { type: "pod", token: "" } });
     const hooks = opt.hooks ?? {}
     const info = opt.info ?? (() => { })
     socket.compress(true)

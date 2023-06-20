@@ -6,11 +6,12 @@ import { z } from "zod";
 import { allType } from "../type"
 import { concat, filter, take, transform } from "streaming-iterables";
 import type { CallOptions, ClientHook } from "./type";
+import * as parser from "socket.io-msgpack-parser"
 export type { BCMsg } from "./type"
 
 export default function Connect({ uri, token }: { uri: string, token: string }) {
     const msgChannel = new Multicast<z.infer<typeof allType>>()
-    const socket = io(uri, { auth: { type: "client", token: token } });
+    const socket = io(uri, { parser, auth: { type: "client", token: token } });
     const send = newSend(socket)
 
     // 类型和出入参规范化

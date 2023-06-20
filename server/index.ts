@@ -1,16 +1,19 @@
-import type { Server } from "socket.io"
+import { Server, ServerOptions } from "socket.io"
 import { condition, newSend } from '../utils';
 import { filter, take } from "streaming-iterables"
 import { Multicast } from 'queueable';
 import { allType } from '../type';
 import { z } from 'zod';
 import TM from "./tokenManager"
+import * as parser from "socket.io-msgpack-parser"
 
-interface ServerOptions {
+interface ServeOptions extends Partial<ServerOptions> {
     token: string[]
 }
 
-export default function serve(wss: Server, opts: ServerOptions) {
+export default function serve(opts: ServeOptions) {
+    opts.parser = parser
+    const wss = new Server(opts)
     wss.compress(true)
     const msgChannel = new Multicast<z.infer<typeof allType>>()
     const tm = TM(opts.token)
@@ -112,4 +115,5 @@ export default function serve(wss: Server, opts: ServerOptions) {
             }
         })
     })
+    return wss
 }

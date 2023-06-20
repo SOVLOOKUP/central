@@ -15,6 +15,7 @@
     "nanoid": "^4.0.2",
     "queueable": "^5.3.1",
     "socket.io-client": "^4.6.2",
+    "socket.io-msgpack-parser": "^3.0.2",
     "streaming-iterables": "^7.1.0",
     "zod": "^3.21.4"
   },
