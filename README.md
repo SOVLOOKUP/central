@@ -20,7 +20,17 @@
 
 由 `__` 开始，由 `__` 结尾的函数为内置函数 例如：`__func_name__`
 
-**内置函数(均可在 Client 中调用):**
+**server 内置函数:**
 
 1. `__meta__`: 获取所有 pod 的可调用函数元信息
 2. `__pods__`: 获取所有 pod 的 id
+
+## 函数调用
+
+client.call
+
+    name: string
+    input?: I,
+    target?: string[]
+    parser?: (msg: BCMsg) => Promise<T> | T
+    msgId?: string

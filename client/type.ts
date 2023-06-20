@@ -8,11 +8,11 @@ export interface BCMsg {
 }
 
 export interface CallOptions<T> {
-    name: string
-    input?: I,
-    target?: string[]
-    parser?: (msg: BCMsg) => Promise<T> | T
-    msgId?: string
+    name: string // 函数名称
+    input?: I, // 输入
+    target?: string[] // 目标 pod
+    parser?: (msg: BCMsg) => Promise<T> | T // 消息解析函数
+    msgId?: string // 会话 id, 一般不需要指定
 }
 
 export interface ClientHook extends Omit<BCMsg, "data"> {
