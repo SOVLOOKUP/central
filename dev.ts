@@ -3,10 +3,10 @@ import { pod, server, client, newHook } from './index';
 
 const port = 3001
 const domain = "localhost"
-const token = "token"
+const token = ["token"]
 
 // server
-server(new Server(port))
+server(new Server(port), { token })
 
 pod({
     url: `ws://${domain}:${port}`, hooks: {
@@ -28,7 +28,7 @@ pod({
 })
 
 // client
-const sdk = client({ uri: `ws://${domain}:${port}`, token })
+const sdk = client({ uri: `ws://${domain}:${port}`, token: token[0] })
 const meta = await sdk.meta()
 
 for await (const hook of meta) {

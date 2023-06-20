@@ -6,10 +6,14 @@ import { allType } from '../type';
 import { z } from 'zod';
 import TM from "./tokenManager"
 
-export default function serve(wss: Server) {
+interface ServerOptions {
+    token: string[]
+}
+
+export default function serve(wss: Server, opts: ServerOptions) {
     wss.compress(true)
     const msgChannel = new Multicast<z.infer<typeof allType>>()
-    const tm = TM()
+    const tm = TM(opts.token)
 
     // 广播消息并获得回复
     const broadcast = async (msg: z.infer<typeof allType>, ...target: string[]) => {

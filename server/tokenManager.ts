@@ -1,9 +1,6 @@
 import { AuthMsg } from "../type"
 
-// todo
-const token = ["token"]
-
-export default () => {
+export default (token: string[]) => {
     return {
         valid: async (msg: unknown) => {
             const data = await AuthMsg.safeParseAsync(msg)
