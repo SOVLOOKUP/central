@@ -17,8 +17,7 @@ export const parseZodObjectFunc = async (obj: { [key: string]: string }) => {
 
 // 构造数据发送器
 export const newSend = (socket: Socket | RemoteSocket<DefaultEventsMap, any> | CSocket, timeout = 3000) => socket["sendMsg"] =
-    async (data: z.infer<typeof allType>) =>
-        socket.timeout(timeout).emit("msg", await allType.parseAsync({ ...data, socketId: socket.id }))
+    async (data: z.infer<typeof allType>) => { socket.timeout(timeout).emit("msg", await allType.parseAsync({ ...data, socketId: socket.id })) }
 
 export const newHook = <I extends ZodType, O extends ZodType>(u: {
     io: (z: typeof import("zod").z) => {
