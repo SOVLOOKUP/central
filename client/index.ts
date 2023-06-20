@@ -3,21 +3,25 @@ import { nanoid } from "nanoid";
 import { io } from "socket.io-client";
 import { Multicast } from "queueable";
 import { z } from "zod";
-import { allType, I } from "../type"
-import { collect, concat, filter, take, transform } from "streaming-iterables";
-import type { ClientHook } from "./type";
+import { allType } from "../type"
+import { concat, filter, take, transform } from "streaming-iterables";
+import type { CallOptions, ClientHook } from "./type";
+export type { BCMsg } from "./type"
 
 export default function Connect({ uri, token }: { uri: string, token: string }) {
     const msgChannel = new Multicast<z.infer<typeof allType>>()
     const socket = io(uri, { auth: { type: "client", token: token } });
     const send = newSend(socket)
 
-    // todo 类型和出入参规范化
-    const call = async <T>(name: string, input?: I, target: string[] = [], parser = async (msg) => Promise<T>, msg_id = nanoid()) => {
+    // 类型和出入参规范化
+    const call = async <T>(opts: CallOptions<T>) => {
+        opts.msgId ??= nanoid()
+        opts.parser ??= msg => msg as T
+        const { name, msgId, input, target, parser } = opts
         // 订阅本 id 的信息流
-        const subscription = filter((v) => v.id === msg_id, msgChannel[Symbol.asyncIterator]())
+        const subscription = filter((v) => v.id === msgId, msgChannel[Symbol.asyncIterator]())
         await send({
-            id: msg_id,
+            id: msgId,
             type: "call",
             data: { func: name, input, target }
         })
@@ -28,10 +32,15 @@ export default function Connect({ uri, token }: { uri: string, token: string }) 
             const len: number = first_msg.data.output["sockets"].length
             if (len === 0) {
                 // 没有就返回空
-                return concat([]) as unknown as AsyncIterableIterator<ClientHook>
+                return concat([]) as unknown as AsyncIterableIterator<T>
             } else {
                 // 返回数据
-                return transform(len, parser, take(len, concat([first_msg], subscription)))
+                return transform(len, async (msg) => {
+                    const allSockets = msg.data.output.sockets
+                    const currentSocket = msg.data.output.msg.socketId
+                    const data = msg.data.output.msg.data.output
+                    return await parser({ allSockets, currentSocket, data })
+                }, take(len, concat([first_msg], subscription)))
             }
         } else {
             console.log(JSON.stringify(first_msg))
@@ -51,12 +60,15 @@ export default function Connect({ uri, token }: { uri: string, token: string }) 
     }
 
     // 获取所有 pod 的可调用函数元信息
-    const meta = () => call<ClientHook>("__meta__", undefined, [], async (msg) => {
-        return ({
-            ...(msg as any).data.output.msg.data.output,
-            id: (msg as any).data.output.msg.socketId,
-            hooks: await parseZodObjectFunc((msg as any).data.output.msg.data.output.hooks)
-        })
+    const meta = () => call<ClientHook>({
+        name: "__meta__",
+        parser: async (msg) => ({
+            ...msg,
+            data: {
+                ...(msg.data as object),
+                hooks: await parseZodObjectFunc(msg.data["hooks"])
+            }
+        } as unknown as ClientHook),
     })
 
     socket.on("msg", async (data) => msgChannel.push(await allType.parseAsync(data)))
